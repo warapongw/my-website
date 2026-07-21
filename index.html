@@ -34,7 +34,6 @@ h1{
     background:white;
     border-radius:15px;
     padding:25px;
-    text-decoration:none;
     color:#333;
     box-shadow:0 5px 15px rgba(0,0,0,.15);
     transition:.3s;
@@ -57,7 +56,22 @@ h1{
 
 .desc{
     color:#666;
-    line-height:1.5;
+    line-height:1.7;
+}
+
+.desc a{
+    color:#0078d4;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.desc a:hover{
+    text-decoration:underline;
+}
+
+.card-link{
+    text-decoration:none;
+    color:inherit;
 }
 </style>
 
@@ -69,17 +83,20 @@ h1{
 
 <div class="container">
 
-    <a class="card"
-       href="https://sanet.st/video-courses"
-       target="_blank">
+    <!-- Video Courses -->
+    <div class="card">
         <div class="icon">🎥</div>
         <div class="title">Video Courses</div>
-        <div class="desc">
-            Sanet Video Courses
-        </div>
-    </a>
 
-    <a class="card"
+        <div class="desc">
+            <p>🎬 <a href="https://sanet.st/video-courses" target="_blank">Sanet Video Courses</a></p>
+            <br>
+            <p>🎓 <a href="https://freeeducationweb.com/" target="_blank">FreeEducationWeb</a></p>
+        </div>
+    </div>
+
+    <!-- GitHub -->
+    <a class="card card-link"
        href="https://github.com"
        target="_blank">
         <div class="icon">💻</div>
@@ -89,7 +106,8 @@ h1{
         </div>
     </a>
 
-    <a class="card"
+    <!-- Docker -->
+    <a class="card card-link"
        href="https://hub.docker.com"
        target="_blank">
         <div class="icon">🐳</div>
@@ -99,7 +117,8 @@ h1{
         </div>
     </a>
 
-    <a class="card"
+    <!-- Kubernetes -->
+    <a class="card card-link"
        href="https://kubernetes.io"
        target="_blank">
         <div class="icon">☸️</div>
@@ -109,7 +128,8 @@ h1{
         </div>
     </a>
 
-    <a class="card"
+    <!-- .NET -->
+    <a class="card card-link"
        href="https://learn.microsoft.com/dotnet/"
        target="_blank">
         <div class="icon">⚙️</div>
@@ -119,7 +139,8 @@ h1{
         </div>
     </a>
 
-    <a class="card"
+    <!-- VS Code -->
+    <a class="card card-link"
        href="https://code.visualstudio.com"
        target="_blank">
         <div class="icon">📝</div>
