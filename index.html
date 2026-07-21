@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Dashboard</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+    padding:40px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:30px;
+    color:#333;
+}
+
+.container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:15px;
+    padding:25px;
+    color:#333;
+    box-shadow:0 5px 15px rgba(0,0,0,.15);
+    transition:.3s;
+}
+
+.card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 10px 25px rgba(0,0,0,.25);
+}
+
+.icon{
+    font-size:45px;
+}
+
+.title{
+    font-size:22px;
+    margin:15px 0;
+    font-weight:bold;
+}
+
+.desc{
+    color:#666;
+    line-height:1.7;
+}
+
+.desc a{
+    color:#0078d4;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.desc a:hover{
+    text-decoration:underline;
+}
+
+.card-link{
+    text-decoration:none;
+    color:inherit;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>📚 My Learning Dashboard</h1>
+
+<div class="container">
+
+    <!-- Video Courses -->
+    <div class="card">
+        <div class="icon">🎥</div>
+        <div class="title">Video Courses</div>
+
+        <div class="desc">
+            <p>🎬 <a href="https://sanet.st/video-courses" target="_blank">Sanet Video Courses</a></p>
+            <br>
+            <p>🎓 <a href="https://freeeducationweb.com/" target="_blank">FreeEducationWeb</a></p>
+        </div>
+    </div>
+
+    <!-- Translator -->
+    <a class="card card-link"
+       href="https://translatesubtitles.co/"
+       target="_blank">
+        <div class="icon">🌐</div>
+        <div class="title">Translator</div>
+        <div class="desc">
+            Translate Subtitle Files
+        </div>
+    </a>
+
+    <!-- GitHub -->
+    <a class="card card-link"
+       href="https://github.com"
+       target="_blank">
+        <div class="icon">💻</div>
+        <div class="title">GitHub</div>
+        <div class="desc">
+            Source Code Repository
+        </div>
+    </a>
+
+    <!-- Docker Hub -->
+    <a class="card card-link"
+       href="https://hub.docker.com"
+       target="_blank">
+        <div class="icon">🐳</div>
+        <div class="title">Docker Hub</div>
+        <div class="desc">
+            Docker Images
+        </div>
+    </a>
+
+    <!-- Kubernetes -->
+    <a class="card card-link"
+       href="https://kubernetes.io"
+       target="_blank">
+        <div class="icon">☸️</div>
+        <div class="title">Kubernetes</div>
+        <div class="desc">
+            Official Documentation
+        </div>
+    </a>
+
+    <!-- .NET -->
+    <a class="card card-link"
+       href="https://learn.microsoft.com/dotnet/"
+       target="_blank">
+        <div class="icon">⚙️</div>
+        <div class="title">.NET</div>
+        <div class="desc">
+            Microsoft Learn
+        </div>
+    </a>
+
+    <!-- VS Code -->
+    <a class="card card-link"
+       href="https://code.visualstudio.com"
+       target="_blank">
+        <div class="icon">📝</div>
+        <div class="title">VS Code</div>
+        <div class="desc">
+            Visual Studio Code
+        </div>
+    </a>
+
+</div>
+
+</body>
+</html>
