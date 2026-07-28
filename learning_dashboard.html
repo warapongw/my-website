@@ -587,6 +587,7 @@ h1 {
 // ============================================================
 const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoYXR6bmJhY3FleWphYWFrZXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzM0OTQsImV4cCI6MjEwMDgwOTQ5NH0.QKbLgmkkv60UXd7YULCyNrYqiRAzzSNbqJ0mQ6n9GKk';
+
 // ============================================================
 // ข้อมูลเริ่มต้น (จะใช้ถ้ายังไม่มีข้อมูลใน Supabase)
 // ============================================================
@@ -652,7 +653,7 @@ const DEFAULT_CARDS = [
 ];
 
 // ============================================================
-// Initialize Supabase (เปลี่ยนชื่อตัวแปรเป็น supabaseClient)
+// Initialize Supabase
 // ============================================================
 let supabaseClient = null;
 let currentUser = null;
@@ -669,7 +670,14 @@ if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-an
         if (!sb || !sb.createClient) {
             throw new Error('Supabase library ไม่ถูกโหลด ลองรีเฟรชหน้า');
         }
-        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // กำหนดออปชันให้จดจำ Session ใน localStorage อย่างชัดเจน
+        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
         initApp();
     } catch (err) {
         document.getElementById('loadingMsg').innerHTML =
@@ -752,9 +760,14 @@ async function signIn() {
             return;
         }
     } else {
+        // ทำความสะอาด URL ของหน้าปัจจุบัน โดยตัดพวก Hash (#access_token=...) ออกก่อนส่งไปเป็น Redirect
+        const cleanRedirectUrl = window.location.origin + window.location.pathname;
+        
         const { error } = await supabaseClient.auth.signInWithOtp({
             email,
-            options: { emailRedirectTo: window.location.href }
+            options: { 
+                emailRedirectTo: cleanRedirectUrl 
+            }
         });
         if (error) {
             alert('ส่ง Magic Link ไม่สำเร็จ: ' + error.message);
@@ -1105,9 +1118,19 @@ function escapeHtml(text) {
 // Init
 // ============================================================
 async function initApp() {
+    // ดึง Session ปัจจุบัน (จะทำงานทันทีหากเปิดหน้าเว็บขึ้นมาจาก Magic Link)
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    currentUser = session?.user || null;
+
+    // ดักจับเหตุการณ์หากมีการเปลี่ยนสถานะ (เช่น กดลิงก์แล้ว Login สำเร็จ)
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             currentUser = session?.user || null;
+            
+            // หากมี Hash (#access_token=...) ติดมาใน URL หลังจาก Login สำเร็จ ให้ทำความสะอาด URL ออกให้สวยงาม
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                history.replaceState(null, null, window.location.pathname);
+            }
         } else if (event === 'SIGNED_OUT') {
             currentUser = null;
         }
@@ -1115,7 +1138,8 @@ async function initApp() {
         loadCards();
     });
 
-    await refreshAuth();
+    updateUI();
+    await loadCards();
 }
 
 // Keyboard shortcuts
