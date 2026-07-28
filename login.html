@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ — Learning Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 440px;
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+    backdrop-filter: blur(20px);
+}
+
+.brand {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.brand-icon {
+    font-size: 56px;
+    margin-bottom: 12px;
+    display: inline-block;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.brand h1 {
+    font-size: 1.6rem;
+    color: #333;
+    font-weight: 700;
+}
+
+.brand p {
+    color: #888;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Tabs */
+.tab-switcher {
+    display: flex;
+    background: #f0f0f5;
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 28px;
+}
+
+.tab-switcher button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: #888;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-switcher button.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.2);
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Form Inputs */
+.form-group {
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+    padding-left: 4px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e8e8f0;
+    border-radius: 14px;
+    font-size: 15px;
+    background: #fafafc;
+    transition: all 0.25s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
+.form-group input::placeholder {
+    color: #bbb;
+}
+
+/* Buttons */
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    right: 16px;
+    margin-top: -10px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Google Button */
+.btn-google {
+    width: 100%;
+    padding: 14px;
+    background: white;
+    color: #444;
+    border: 2px solid #e8e8f0;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.btn-google:hover {
+    border-color: #667eea;
+    background: #fafaff;
+}
+
+.btn-google img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e8e8f0;
+}
+
+.divider span {
+    padding: 0 16px;
+}
+
+/* Error / Success Messages */
+.message {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.message.show {
+    display: flex;
+    animation: shake 0.4s ease;
+}
+
+.message.error {
+    background: #fff0f0;
+    color: #e74c3c;
+    border: 1px solid #ffcccc;
+}
+
+.message.success {
+    background: #f0fff4;
+    color: #27ae60;
+    border: 1px solid #c3e6cb;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* Hint */
+.hint-text {
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 16px;
+}
+
+.hint-text a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.hint-text a:hover {
+    text-decoration: underline;
+}
+
+/* Password strength */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 6px;
+    transition: all 0.3s ease;
+    background: #e8e8f0;
+}
+
+.password-strength.weak { background: #e74c3c; width: 33%; }
+.password-strength.medium { background: #f39c12; width: 66%; }
+.password-strength.strong { background: #27ae60; width: 100%; }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 28px 20px;
+        border-radius: 20px;
+    }
+    .brand h1 {
+        font-size: 1.3rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="brand">
+            <div class="brand-icon">📚</div>
+            <h1>Learning Dashboard</h1>
+            <p>จัดการแหล่งเรียนรู้ของคุณ</p>
+        </div>
+
+        <div id="messageBox" class="message"></div>
+
+        <!-- Google Login -->
+        <button class="btn-google" onclick="signInWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+            เข้าสู่ระบบด้วย Google
+        </button>
+
+        <div class="divider"><span>หรือ</span></div>
+
+        <!-- Tab Switcher -->
+        <div class="tab-switcher">
+            <button class="active" onclick="switchTab('login')" id="tabLogin">เข้าสู่ระบบ</button>
+            <button onclick="switchTab('signup')" id="tabSignup">สมัครสมาชิก</button>
+        </div>
+
+        <!-- Login Panel -->
+        <div id="panelLogin" class="tab-panel active">
+            <div class="form-group">
+                <label>อีเมล</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" onkeypress="if(event.key==='Enter')signIn()">
+            </div>
+            <div class="form-group">
+                <label>รหัสผ่าน</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" onkeypress="if(event.key==='Enter')signIn()">
+            </div>
+            <button class="btn-primary" id="btnLogin" onclick="signIn()">เข้าสู่ระบบ</button>
+            <p class="hint-text">
+                <a href="#" onclick="sendMagicLink(); return false;">🔗 ใช้ Magic Link (ไม่ต้องใส่รหัสผ่าน)</a>
+            </p>
+        </div>
+
+        <!-- Signup Panel -->
+        <div id="panelSignup" class="tab-panel">
+            <div class="form-group">
+                <label>อีเมล</label>
+                <input type="email" id="signupEmail" placeholder="your@email.com" onkeypress="if(event.key==='Enter')signUp()">
+            </div>
+            <div class="form-group">
+                <label>รหัสผ่าน</label>
+                <input type="password" id="signupPassword" placeholder="อย่างน้อย 6 ตัวอักษร" oninput="checkPasswordStrength()" onkeypress="if(event.key==='Enter')signUp()">
+                <div id="pwStrength" class="password-strength"></div>
+            </div>
+            <div class="form-group">
+                <label>ยืนยันรหัสผ่าน</label>
+                <input type="password" id="signupPassword2" placeholder="••••••••" onkeypress="if(event.key==='Enter')signUp()">
+            </div>
+            <button class="btn-primary" id="btnSignup" onclick="signUp()">สมัครสมาชิก</button>
+        </div>
+
+        <p class="hint-text">
+            กดปุ่มด้านบนเพื่อสลับระหว่างเข้าสู่ระบบ / สมัครสมาชิก
+        </p>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// Supabase Config
+// ============================================================
+const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoYXR6bmJhY3FleWphYWFrZXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzM0OTQsImV4cCI6MjEwMDgwOTQ5NH0.QKbLgmkkv60UXd7YULCyNrYqiRAzzSNbqJ0mQ6n9GKk';
+
+let supabaseClient = null;
+
+// Redirect URL (back to dashboard)
+const REDIRECT_URL = window.location.origin + window.location.pathname.replace('login.html', 'learning_dashboard.html');
+
+// ============================================================
+// Init
+// ============================================================
+(async function init() {
+    try {
+        const sb = window.supabase;
+        if (!sb || !sb.createClient) {
+            showMessage('error', 'ไม่สามารถโหลด Supabase library ได้');
+            return;
+        }
+        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+
+        // ถ้า login แล้ว → redirect ไป dashboard
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+            window.location.href = 'learning_dashboard.html';
+        }
+
+        // ดักจับ Magic Link / OAuth redirect
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                if (session?.user) {
+                    window.location.href = 'learning_dashboard.html';
+                }
+            }
+        });
+    } catch (err) {
+        showMessage('error', 'เกิดข้อผิดพลาด: ' + err.message);
+    }
+})();
+
+// ============================================================
+// Tab Switching
+// ============================================================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-switcher button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+    if (tab === 'login') {
+        document.getElementById('tabLogin').classList.add('active');
+        document.getElementById('panelLogin').classList.add('active');
+    } else {
+        document.getElementById('tabSignup').classList.add('active');
+        document.getElementById('panelSignup').classList.add('active');
+    }
+}
+
+// ============================================================
+// Messages
+// ============================================================
+function showMessage(type, text) {
+    const box = document.getElementById('messageBox');
+    box.className = 'message ' + type + ' show';
+    box.textContent = (type === 'error' ? '❌ ' : '✅ ') + text;
+}
+
+function clearMessage() {
+    document.getElementById('messageBox').classList.remove('show');
+}
+
+function setLoading(id, loading) {
+    const btn = document.getElementById(id);
+    btn.classList.toggle('loading', loading);
+    btn.disabled = loading;
+}
+
+// ============================================================
+// Auth Actions
+// ============================================================
+async function signIn() {
+    clearMessage();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email) { showMessage('error', 'กรุณาใส่อีเมล'); return; }
+    if (!password) { showMessage('error', 'กรุณาใส่รหัสผ่าน'); return; }
+
+    setLoading('btnLogin', true);
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    setLoading('btnLogin', false);
+
+    if (error) {
+        showMessage('error', 'เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
+        return;
+    }
+
+    window.location.href = 'learning_dashboard.html';
+}
+
+async function signUp() {
+    clearMessage();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const password2 = document.getElementById('signupPassword2').value;
+
+    if (!email) { showMessage('error', 'กรุณาใส่อีเมล'); return; }
+    if (!password || password.length < 6) { showMessage('error', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+    if (password !== password2) { showMessage('error', 'รหัสผ่านไม่ตรงกัน'); return; }
+
+    setLoading('btnSignup', true);
+    const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: REDIRECT_URL }
+    });
+    setLoading('btnSignup', false);
+
+    if (error) {
+        showMessage('error', 'สมัครไม่สำเร็จ: ' + error.message);
+        return;
+    }
+
+    showMessage('success', 'สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ');
+    setTimeout(() => switchTab('login'), 2000);
+}
+
+async function sendMagicLink() {
+    clearMessage();
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!email) { showMessage('error', 'กรุณาใส่อีเมลก่อน แล้วกด Magic Link'); return; }
+
+    setLoading('btnLogin', true);
+    const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: REDIRECT_URL }
+    });
+    setLoading('btnLogin', false);
+
+    if (error) {
+        showMessage('error', 'ส่ง Magic Link ไม่สำเร็จ: ' + error.message);
+        return;
+    }
+    showMessage('success', 'ส่ง Magic Link ไปที่ ' + email + ' แล้ว กรุณาตรวจสอบอีเมล');
+}
+
+async function signInWithGoogle() {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: REDIRECT_URL }
+    });
+    if (error) showMessage('error', 'เกิดข้อผิดพลาด: ' + error.message);
+}
+
+// ============================================================
+// Password Strength
+// ============================================================
+function checkPasswordStrength() {
+    const pw = document.getElementById('signupPassword').value;
+    const bar = document.getElementById('pwStrength');
+    bar.className = 'password-strength';
+    if (pw.length === 0) return;
+    if (pw.length < 6) bar.classList.add('weak');
+    else if (pw.length < 10 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw)) bar.classList.add('medium');
+    else bar.classList.add('strong');
+}
+</script>
+
+</body>
+</html>

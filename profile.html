@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โปรไฟล์ของฉัน — Learning Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+/* ===== Navigation Bar ===== */
+.navbar {
+    max-width: 800px;
+    margin: 0 auto 30px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 12px 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.navbar-brand {
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.navbar-brand:hover {
+    opacity: 0.9;
+}
+
+.btn-nav {
+    background: rgba(255,255,255,0.9);
+    color: #667eea;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-nav:hover {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-nav.logout {
+    background: rgba(255,100,100,0.9);
+    color: #fff;
+}
+
+.btn-nav.logout:hover {
+    background: #ff4757;
+}
+
+/* ===== Profile Card ===== */
+.profile-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.25);
+    backdrop-filter: blur(20px);
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    margin: 0 auto 16px auto;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.profile-header h1 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.profile-header p {
+    color: #888;
+    font-size: 14px;
+}
+
+.role-badge {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.role-badge.admin {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.role-badge.user {
+    background: #e8e8f0;
+    color: #555;
+}
+
+/* ===== Form Sections ===== */
+.section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid #f0f0f5;
+}
+
+.section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section h2 {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+    padding-left: 4px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e8e8f0;
+    border-radius: 14px;
+    font-size: 15px;
+    background: #fafafc;
+    transition: all 0.25s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+}
+
+.form-group input:disabled {
+    background: #f0f0f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-secondary {
+    padding: 14px 28px;
+    background: #f0f0f5;
+    color: #555;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-secondary:hover {
+    background: #e8e8f0;
+}
+
+.btn-danger {
+    padding: 14px 28px;
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-danger:hover {
+    background: #ff2e43;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.3);
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+/* ===== Messages ===== */
+.message {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+}
+
+.message.show {
+    display: flex;
+    animation: shake 0.4s ease;
+}
+
+.message.error {
+    background: #fff0f0;
+    color: #e74c3c;
+    border: 1px solid #ffcccc;
+}
+
+.message.success {
+    background: #f0fff4;
+    color: #27ae60;
+    border: 1px solid #c3e6cb;
+}
+
+.message.info {
+    background: #f0f4ff;
+    color: #667eea;
+    border: 1px solid #d0d8f0;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+}
+
+/* ===== Info Row ===== */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #888;
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+    word-break: break-all;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    .profile-card {
+        padding: 24px 20px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    .navbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .button-group {
+        flex-direction: column;
+    }
+    .btn-primary, .btn-secondary, .btn-danger {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar">
+    <a href="learning_dashboard.html" class="navbar-brand">📚 Learning Dashboard</a>
+    <div style="display:flex; gap:10px;">
+        <a href="learning_dashboard.html" class="btn-nav">← กลับหน้าหลัก</a>
+        <button class="btn-nav logout" onclick="signOut()">🚪 ออกจากระบบ</button>
+    </div>
+</nav>
+
+<div class="profile-wrapper">
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="avatar" id="userAvatar">👤</div>
+            <h1 id="displayName">กำลังโหลด...</h1>
+            <p id="displayEmail">...</p>
+            <div class="role-badge" id="roleBadge">...</div>
+        </div>
+
+        <div id="messageBox" class="message"></div>
+
+        <!-- Account Info -->
+        <div class="section">
+            <h2>📋 ข้อมูลบัญชี</h2>
+            <div class="info-row">
+                <span class="info-label">อีเมล</span>
+                <span class="info-value" id="infoEmail">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">รหัสผู้ใช้ (UUID)</span>
+                <span class="info-value" id="infoUUID">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">สถานะบัญชี</span>
+                <span class="info-value" id="infoStatus">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">เข้าสู่ระบบเมื่อ</span>
+                <span class="info-value" id="infoLastSignIn">-</span>
+            </div>
+        </div>
+
+        <!-- Edit Profile -->
+        <div class="section">
+            <h2>✏️ แก้ไขโปรไฟล์</h2>
+            <div class="form-group">
+                <label>ชื่อที่แสดง</label>
+                <input type="text" id="inputDisplayName" placeholder="ชื่อของคุณ" onkeypress="if(event.key==='Enter')updateProfile()">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="btnUpdateProfile" onclick="updateProfile()">💾 บันทึกชื่อ</button>
+            </div>
+        </div>
+
+        <!-- Change Password -->
+        <div class="section">
+            <h2>🔐 เปลี่ยนรหัสผ่าน</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>รหัสผ่านใหม่</label>
+                    <input type="password" id="inputNewPassword" placeholder="อย่างน้อย 6 ตัวอักษร">
+                </div>
+                <div class="form-group">
+                    <label>ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" id="inputConfirmPassword" placeholder="••••••••">
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" id="btnChangePassword" onclick="changePassword()">🔑 เปลี่ยนรหัสผ่าน</button>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="section">
+            <h2>⚠️ โซนอันตราย</h2>
+            <p style="color:#888; font-size:14px; margin-bottom:12px;">
+                การดำเนินการด้านล่างนี้ไม่สามารถยกเลิกได้
+            </p>
+            <div class="button-group">
+                <button class="btn-danger" onclick="signOutAllDevices()">🚪 ออกจากระบบทุกอุปกรณ์</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// Supabase Config
+// ============================================================
+const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoYXR6bmJhY3FleWphYWFrZXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzM0OTQsImV4cCI6MjEwMDgwOTQ5NH0.QKbLgmkkv60UXd7YULCyNrYqiRAzzSNbqJ0mQ6n9GKk';
+
+let supabaseClient = null;
+let currentUser = null;
+let currentRole = 'user';
+
+// ============================================================
+// Init
+// ============================================================
+(async function init() {
+    try {
+        const sb = window.supabase;
+        if (!sb || !sb.createClient) {
+            showMessage('error', 'ไม่สามารถโหลด Supabase library ได้');
+            return;
+        }
+
+        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        currentUser = session.user;
+        currentRole = detectRole(currentUser);
+        renderProfile();
+
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                window.location.href = 'login.html';
+            }
+        });
+    } catch (err) {
+        showMessage('error', 'เกิดข้อผิดพลาด: ' + err.message);
+    }
+})();
+
+// ============================================================
+// Role Detection (same logic as dashboard)
+// ============================================================
+function detectRole(user) {
+    if (!user) return 'user';
+    const metaRole = user.user_metadata?.role;
+    if (metaRole === 'admin') return 'admin';
+    const adminEmails = ['admin@example.com'];
+    if (adminEmails.includes(user.email)) return 'admin';
+    return 'user';
+}
+
+// ============================================================
+// Render Profile
+// ============================================================
+function renderProfile() {
+    if (!currentUser) return;
+
+    const email = currentUser.email || 'ไม่มีอีเมล';
+    const name = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || email.split('@')[0];
+    const avatar = currentUser.user_metadata?.avatar_url ? null : name.charAt(0).toUpperCase();
+
+    document.getElementById('displayName').textContent = name;
+    document.getElementById('displayEmail').textContent = email;
+    document.getElementById('userAvatar').textContent = avatar || '👤';
+
+    const badge = document.getElementById('roleBadge');
+    badge.textContent = currentRole === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้ใช้ทั่วไป';
+    badge.className = 'role-badge ' + currentRole;
+
+    document.getElementById('infoEmail').textContent = email;
+    document.getElementById('infoUUID').textContent = currentUser.id;
+    document.getElementById('infoStatus').textContent = currentUser.email_confirmed_at ? '✅ ยืนยันแล้ว' : '⏳ รอการยืนยัน';
+    document.getElementById('infoLastSignIn').textContent = currentUser.last_sign_in_at
+        ? new Date(currentUser.last_sign_in_at).toLocaleString('th-TH')
+        : 'ไม่มีข้อมูล';
+
+    document.getElementById('inputDisplayName').value = name;
+}
+
+// ============================================================
+// Messages
+// ============================================================
+function showMessage(type, text) {
+    const box = document.getElementById('messageBox');
+    box.className = 'message ' + type + ' show';
+    box.textContent = (type === 'error' ? '❌ ' : type === 'success' ? '✅ ' : 'ℹ️ ') + text;
+}
+
+function clearMessage() {
+    document.getElementById('messageBox').classList.remove('show');
+}
+
+function setLoading(id, loading) {
+    const btn = document.getElementById(id);
+    btn.classList.toggle('loading', loading);
+    btn.disabled = loading;
+}
+
+// ============================================================
+// Actions
+// ============================================================
+async function updateProfile() {
+    clearMessage();
+    const name = document.getElementById('inputDisplayName').value.trim();
+    if (!name) { showMessage('error', 'กรุณาใส่ชื่อ'); return; }
+
+    setLoading('btnUpdateProfile', true);
+    const { data, error } = await supabaseClient.auth.updateUser({
+        data: { full_name: name }
+    });
+    setLoading('btnUpdateProfile', false);
+
+    if (error) {
+        showMessage('error', 'บันทึกไม่สำเร็จ: ' + error.message);
+        return;
+    }
+
+    currentUser = data.user;
+    renderProfile();
+    showMessage('success', 'บันทึกชื่อเรียบร้อยแล้ว');
+}
+
+async function changePassword() {
+    clearMessage();
+    const pw1 = document.getElementById('inputNewPassword').value;
+    const pw2 = document.getElementById('inputConfirmPassword').value;
+
+    if (!pw1 || pw1.length < 6) { showMessage('error', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); return; }
+    if (pw1 !== pw2) { showMessage('error', 'รหัสผ่านไม่ตรงกัน'); return; }
+
+    setLoading('btnChangePassword', true);
+    const { data, error } = await supabaseClient.auth.updateUser({ password: pw1 });
+    setLoading('btnChangePassword', false);
+
+    if (error) {
+        showMessage('error', 'เปลี่ยนรหัสผ่านไม่สำเร็จ: ' + error.message);
+        return;
+    }
+
+    document.getElementById('inputNewPassword').value = '';
+    document.getElementById('inputConfirmPassword').value = '';
+    showMessage('success', 'เปลี่ยนรหัสผ่านสำเร็จ');
+}
+
+async function signOut() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+}
+
+async function signOutAllDevices() {
+    if (!confirm('ต้องการออกจากระบบทุกอุปกรณ์หรือไม่?\nคุณจะต้องเข้าสู่ระบบใหม่ทุกอุปกรณ์')) return;
+    await supabaseClient.auth.signOut({ scope: 'global' });
+    window.location.href = 'login.html';
+}
+</script>
+
+</body>
+</html>

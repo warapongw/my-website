@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #fff;
+    font-size: 2.5rem;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* ===== Navigation Bar ===== */
+.navbar {
+    max-width: 1400px;
+    margin: 0 auto 20px auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 12px 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.navbar-brand {
+    color: #fff;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.navbar .user-info {
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar .role-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.role-badge.admin {
+    background: #ffd700;
+    color: #333;
+}
+
+.role-badge.user {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+}
+
+.btn-nav {
+    background: rgba(255,255,255,0.9);
+    color: #667eea;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-nav:hover {
+    background: #fff;
+    transform: translateY(-1px);
+}
+
+.btn-nav.logout {
+    background: rgba(255,100,100,0.9);
+    color: #fff;
+}
+
+.btn-nav.logout:hover {
+    background: #ff4757;
+}
+
+/* ===== Form Section ===== */
+.form-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 720px;
+    margin: 0 auto 40px auto;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+}
+
+.form-section h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.form-group input {
+    padding: 13px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.25s ease;
+    background: #fafafa;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+    margin-top: 5px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.btn-add:active {
+    transform: scale(0.98);
+}
+
+.btn-icon {
+    background: #f0f0f0;
+    border: 2px solid #e0e0e0;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-icon:hover {
+    background: #e8e8e8;
+    border-color: #667eea;
+}
+
+.btn-seed {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+.btn-seed:hover {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+/* ===== Emoji Picker ===== */
+.emoji-picker-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.emoji-picker {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.emoji-picker h3 {
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.emoji-item {
+    font-size: 26px;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 10px;
+    text-align: center;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.emoji-item:hover {
+    background: #f0f0f0;
+    transform: scale(1.25);
+}
+
+.btn-close-picker {
+    margin-top: 14px;
+    background: #eee;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+.btn-close-picker:hover {
+    background: #ddd;
+}
+
+/* ===== Read-only Banner ===== */
+.readonly-banner {
+    max-width: 720px;
+    margin: 0 auto 20px auto;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 14px;
+    padding: 16px 24px;
+    color: #fff;
+    text-align: center;
+    font-size: 15px;
+    display: none;
+}
+
+.readonly-banner.show {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+/* ===== Cards Grid ===== */
+.container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 25px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    color: #333;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card[data-single-url] {
+    cursor: pointer;
+}
+
+.icon {
+    font-size: 48px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+.icon:hover {
+    transform: scale(1.15);
+}
+
+.title {
+    font-size: 22px;
+    margin: 12px 0;
+    font-weight: 700;
+    color: #222;
+}
+
+.desc {
+    color: #666;
+    line-height: 1.7;
+    font-size: 15px;
+    word-break: break-all;
+}
+
+.desc p {
+    margin-bottom: 6px;
+    position: relative;
+    padding-right: 24px;
+}
+
+.desc a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.desc a:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Link delete button */
+.link-delete {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(255, 71, 87, 0.3);
+}
+
+.desc p:hover .link-delete {
+    opacity: 1;
+}
+
+.link-delete:hover {
+    background: #ff2e43;
+    transform: translateY(-50%) scale(1.15);
+}
+
+/* Card delete button */
+.delete-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+    z-index: 10;
+}
+
+.card:hover .delete-btn {
+    opacity: 1;
+}
+
+.delete-btn:hover {
+    background: #ff2e43;
+    transform: scale(1.15);
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    color: #fff;
+    font-size: 18px;
+    padding: 40px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    .navbar-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    h1 {
+        font-size: 1.8rem;
+    }
+    body {
+        padding: 20px 15px;
+    }
+    .emoji-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+</style>
+</head>
+<body>
+
+<h1>📚 My Learning Dashboard</h1>
+
+<!-- Navigation Bar -->
+<nav class="navbar" id="navbar">
+    <div class="navbar-brand">📚 Learning Dashboard</div>
+    <div class="navbar-actions">
+        <div class="user-info" id="userInfo">
+            <span id="userEmail">กำลังโหลด...</span>
+            <span class="role-badge" id="roleBadge">...</span>
+        </div>
+        <a href="profile.html" class="btn-nav">👤 โปรไฟล์</a>
+        <button class="btn-nav logout" onclick="signOut()">🚪 ออกจากระบบ</button>
+    </div>
+</nav>
+
+<!-- Read-only Banner (for non-admin) -->
+<div class="readonly-banner" id="readonlyBanner">
+    🔒 คุณอยู่ในโหมด <strong>อ่านอย่างเดียว</strong> — ติดต่อผู้ดูแลหากต้องการเพิ่ม/แก้ไขการ์ด
+</div>
+
+<!-- Add Form (visible only for admin) -->
+<div class="form-section" id="addForm" style="display:none;">
+    <h2>➕ Add New Resource</h2>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="inputTitle">Title</label>
+            <input type="text" id="inputTitle" placeholder="e.g. React Docs">
+        </div>
+        <div class="form-group">
+            <label>Icon</label>
+            <div style="display:flex;align-items:center;gap:10px;height:46px;">
+                <span id="selectedEmoji" style="font-size:32px;cursor:pointer;" title="Click to change icon" onclick="openEmojiPicker('new')">📘</span>
+                <button type="button" class="btn-icon" onclick="openEmojiPicker('new')">เลือกไอคอน</button>
+            </div>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group full">
+            <label for="inputUrl">URL</label>
+            <input type="text" id="inputUrl" placeholder="https://...">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group full">
+            <label for="inputLinkTitle">Link Title (Sub Title)</label>
+            <input type="text" id="inputLinkTitle" placeholder="e.g. Sanet Video Courses">
+        </div>
+    </div>
+    <button class="btn-add" onclick="addCard()">➕ Add to Dashboard</button>
+    <button class="btn-seed" id="btnSeed" onclick="seedDefaultData()" style="display:none;">🔄 โหลดข้อมูลเริ่มต้น</button>
+</div>
+
+<!-- Emoji Picker Modal -->
+<div class="emoji-picker-overlay" id="emojiPickerOverlay" onclick="if(event.target===this) closeEmojiPicker()">
+    <div class="emoji-picker">
+        <h3>เลือกไอคอน</h3>
+        <div class="emoji-grid" id="emojiGrid"></div>
+        <button class="btn-close-picker" onclick="closeEmojiPicker()">ปิด</button>
+    </div>
+</div>
+
+<!-- Cards Container -->
+<div class="loading" id="loadingMsg">⏳ กำลังโหลดข้อมูล...</div>
+<div class="container" id="cardContainer" style="display:none;"></div>
+
+<script>
+// ============================================================
+// Supabase Config
+// ============================================================
+const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoYXR6bmJhY3FleWphYWFrZXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzM0OTQsImV4cCI6MjEwMDgwOTQ5NH0.QKbLgmkkv60UXd7YULCyNrYqiRAzzSNbqJ0mQ6n9GKk';
+
+// ============================================================
+// Default Data
+// ============================================================
+const DEFAULT_CARDS = [
+    {
+        title: 'Video Courses',
+        icon: '🎥',
+        links: [
+            { url: 'https://sanet.st/video-courses', title: 'Sanet Video Courses' },
+            { url: 'https://freeeducationweb.com/', title: 'FreeEducationWeb' }
+        ]
+    },
+    {
+        title: 'Translator',
+        icon: '🌐',
+        links: [
+            { url: '#', title: 'Translate Subtitle Files' }
+        ]
+    },
+    {
+        title: 'TV',
+        icon: '🎥',
+        links: [
+            { url: 'https://adintrend.com', title: 'Adintrend' },
+            { url: 'https://famelack.com', title: 'Famelack' }
+        ]
+    },
+    {
+        title: 'GitHub',
+        icon: '💻',
+        links: [
+            { url: 'https://github.com', title: 'Source Code Repository' }
+        ]
+    },
+    {
+        title: 'Docker Hub',
+        icon: '🐳',
+        links: [
+            { url: 'https://hub.docker.com', title: 'Docker Images' }
+        ]
+    },
+    {
+        title: 'Kubernetes',
+        icon: '☸️',
+        links: [
+            { url: 'https://kubernetes.io', title: 'Official Documentation' }
+        ]
+    },
+    {
+        title: '.NET',
+        icon: '⚙️',
+        links: [
+            { url: 'https://learn.microsoft.com/dotnet/', title: 'Microsoft Learn' }
+        ]
+    },
+    {
+        title: 'VS Code',
+        icon: '📝',
+        links: [
+            { url: 'https://code.visualstudio.com', title: 'Visual Studio Code' }
+        ]
+    }
+];
+
+// ============================================================
+// State
+// ============================================================
+let supabaseClient = null;
+let currentUser = null;
+let currentRole = 'user'; // 'admin' or 'user'
+let currentEmoji = '📘';
+let pickerTarget = null;
+
+// ============================================================
+// Initialize
+// ============================================================
+(async function init() {
+    if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-anon')) {
+        document.getElementById('loadingMsg').innerHTML =
+            '⚠️ กรุณาแก้ไข SUPABASE_URL และ SUPABASE_ANON_KEY ในโค้ดก่อนใช้งาน';
+        return;
+    }
+
+    try {
+        const sb = window.supabase;
+        if (!sb || !sb.createClient) {
+            throw new Error('Supabase library ไม่ถูกโหลด');
+        }
+
+        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
+
+        // ตรวจสอบ session
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.user) {
+            // ยังไม่ login → redirect ไปหน้า login
+            window.location.href = 'login.html';
+            return;
+        }
+
+        currentUser = session.user;
+        currentRole = detectRole(currentUser);
+
+        // ดักจับการเปลี่ยน auth state
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                window.location.href = 'login.html';
+            } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                currentUser = session?.user || null;
+                currentRole = detectRole(currentUser);
+                if (window.location.hash && window.location.hash.includes('access_token')) {
+                    history.replaceState(null, null, window.location.pathname);
+                }
+                updateUI();
+                loadCards();
+            }
+        });
+
+        // สร้าง emoji picker
+        initEmojiPicker();
+
+        updateUI();
+        await loadCards();
+    } catch (err) {
+        document.getElementById('loadingMsg').innerHTML =
+            '❌ ไม่สามารถเชื่อมต่อ Supabase ได้: ' + escapeHtml(err.message);
+        console.error(err);
+    }
+})();
+
+// ============================================================
+// Role Detection
+// ============================================================
+function detectRole(user) {
+    if (!user) return 'user';
+    // ตรวจสอบจาก user_metadata.role
+    const metaRole = user.user_metadata?.role;
+    if (metaRole === 'admin') return 'admin';
+
+    // หรือตรวจสอบจาก email ที่ hardcode ไว้ (สำหรับ static site)
+    const adminEmails = ['admin@example.com']; // แก้ไขตามต้องการ
+    if (adminEmails.includes(user.email)) return 'admin';
+
+    return 'user';
+}
+
+// ============================================================
+// UI Updates
+// ============================================================
+function updateUI() {
+    const userEmail = document.getElementById('userEmail');
+    const roleBadge = document.getElementById('roleBadge');
+    const addForm = document.getElementById('addForm');
+    const readonlyBanner = document.getElementById('readonlyBanner');
+    const btnSeed = document.getElementById('btnSeed');
+
+    if (currentUser) {
+        userEmail.textContent = currentUser.email || 'ผู้ใช้';
+        roleBadge.textContent = currentRole === 'admin' ? 'Admin' : 'User';
+        roleBadge.className = 'role-badge ' + currentRole;
+
+        if (currentRole === 'admin') {
+            addForm.style.display = 'block';
+            readonlyBanner.classList.remove('show');
+            btnSeed.style.display = 'inline-block';
+        } else {
+            addForm.style.display = 'none';
+            readonlyBanner.classList.add('show');
+            btnSeed.style.display = 'none';
+        }
+    } else {
+        window.location.href = 'login.html';
+    }
+}
+
+async function signOut() {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'login.html';
+}
+
+// ============================================================
+// Emoji Picker
+// ============================================================
+const EMOJIS = [
+    '📘','📗','📕','📙','📓','📔','📒','🗂️','📂','🔗','🌐','🔧','⚡','⭐','🔥','🚀','💡','🎯',
+    '🎥','💻','🐳','☸️','⚙️','📝','🎓','🎬','📊','📈','📉','🔍','🔎','🔐','🔑','🛡️','⚔️','🏆','🥇',
+    '🧠','💪','👍','👎','👀','🧐','🤔','😎','🥳','😍','🤩','🥰','😇','🤠','🤯','🤖','👾','👽',
+    '💼','🏢','🏠','🌍','🌎','🌏','🗺️','🏞️','🌅','🌄','🌠','🌌','🎨','🎭','🎪','🎰','🎲',
+    '📱','💾','💿','📀','🖥️','🖨️','⌨️','🖱️','🕹️','📷','📸','📹','📽️',
+    '🎙️','🎚️','🎛️','🎤','🎧','📻','🎷','🎸','🎹','🎺','🎻','🥁','📯','🎼','🎵','🎶'
+];
+
+function initEmojiPicker() {
+    const emojiGrid = document.getElementById('emojiGrid');
+    emojiGrid.innerHTML = '';
+    EMOJIS.forEach(emoji => {
+        const span = document.createElement('span');
+        span.className = 'emoji-item';
+        span.textContent = emoji;
+        span.onclick = () => selectEmoji(emoji);
+        emojiGrid.appendChild(span);
+    });
+}
+
+function openEmojiPicker(target) {
+    pickerTarget = target;
+    document.getElementById('emojiPickerOverlay').style.display = 'flex';
+}
+
+function closeEmojiPicker() {
+    document.getElementById('emojiPickerOverlay').style.display = 'none';
+    pickerTarget = null;
+}
+
+function selectEmoji(emoji) {
+    if (pickerTarget === 'new') {
+        currentEmoji = emoji;
+        document.getElementById('selectedEmoji').textContent = emoji;
+    } else if (pickerTarget && pickerTarget.dataset && pickerTarget.dataset.cardId) {
+        updateCardIcon(pickerTarget.dataset.cardId, emoji);
+    }
+    closeEmojiPicker();
+}
+
+// ============================================================
+// Database Functions
+// ============================================================
+async function loadCards() {
+    const container = document.getElementById('cardContainer');
+    const loading = document.getElementById('loadingMsg');
+
+    loading.style.display = 'block';
+    container.style.display = 'none';
+
+    if (!supabaseClient) {
+        loading.innerHTML = '⚠️ ยังไม่ได้ตั้งค่า Supabase';
+        return;
+    }
+
+    try {
+        // โหลดการ์ดทั้งหมด (สาธารณะ + ของตัวเอง)
+        const { data, error } = await supabaseClient
+            .from('cards')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        const cards = data || [];
+
+        if (currentRole === 'admin' && cards.length === 0) {
+            document.getElementById('btnSeed').style.display = 'inline-block';
+            document.getElementById('btnSeed').textContent = '🔄 โหลดข้อมูลเริ่มต้น (คลิกที่นี่)';
+        }
+
+        renderCards(cards);
+        loading.style.display = 'none';
+        container.style.display = 'grid';
+    } catch (err) {
+        loading.innerHTML = '❌ โหลดข้อมูลไม่สำเร็จ: ' + escapeHtml(err.message);
+        console.error(err);
+    }
+}
+
+async function seedDefaultData() {
+    if (currentRole !== 'admin') {
+        alert('คุณไม่มีสิทธิ์ในการจัดการข้อมูล');
+        return;
+    }
+
+    if (!confirm('ต้องการโหลดข้อมูลเริ่มต้นลง Dashboard หรือไม่?')) return;
+
+    const btn = document.getElementById('btnSeed');
+    btn.textContent = '⏳ กำลังโหลด...';
+    btn.disabled = true;
+
+    try {
+        for (const card of DEFAULT_CARDS) {
+            const { error } = await supabaseClient.from('cards').insert({
+                user_id: currentUser.id,
+                title: card.title,
+                icon: card.icon,
+                links: card.links
+            });
+            if (error) throw error;
+        }
+        alert('✅ โหลดข้อมูลเริ่มต้นเสร็จสิ้น');
+        await loadCards();
+    } catch (err) {
+        alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    } finally {
+        btn.textContent = '🔄 โหลดข้อมูลเริ่มต้น';
+        btn.disabled = false;
+    }
+}
+
+async function addCard() {
+    if (currentRole !== 'admin') {
+        alert('คุณไม่มีสิทธิ์ในการเพิ่มข้อมูล');
+        return;
+    }
+
+    const title = document.getElementById('inputTitle').value.trim();
+    const url = document.getElementById('inputUrl').value.trim();
+    const linkTitle = document.getElementById('inputLinkTitle').value.trim();
+
+    if (!title) { alert('⚠️ กรุณาใส่ Title'); document.getElementById('inputTitle').focus(); return; }
+    if (!url) { alert('⚠️ กรุณาใส่ URL'); document.getElementById('inputUrl').focus(); return; }
+
+    let finalUrl = url;
+    if (!/^https?:\/\//i.test(url)) {
+        finalUrl = 'https://' + url;
+    }
+
+    try {
+        const { data: existing, error: findErr } = await supabaseClient
+            .from('cards')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .ilike('title', title)
+            .single();
+
+        if (findErr && findErr.code !== 'PGRST116') {
+            alert('เกิดข้อผิดพลาด: ' + findErr.message);
+            return;
+        }
+
+        if (existing) {
+            const newLink = { url: finalUrl, title: linkTitle || finalUrl };
+            const updatedLinks = [...(existing.links || []), newLink];
+            const { error } = await supabaseClient
+                .from('cards')
+                .update({ links: updatedLinks })
+                .eq('id', existing.id);
+            if (error) throw error;
+        } else {
+            const displayTitle = linkTitle || title;
+            const { error } = await supabaseClient.from('cards').insert({
+                user_id: currentUser.id,
+                title: title,
+                icon: currentEmoji,
+                links: [{ url: finalUrl, title: displayTitle }]
+            });
+            if (error) throw error;
+        }
+
+        document.getElementById('inputTitle').value = '';
+        document.getElementById('inputUrl').value = '';
+        document.getElementById('inputLinkTitle').value = '';
+        document.getElementById('inputTitle').focus();
+        await loadCards();
+    } catch (err) {
+        alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    }
+}
+
+async function updateCardIcon(cardId, emoji) {
+    if (currentRole !== 'admin') return;
+
+    const { error } = await supabaseClient
+        .from('cards')
+        .update({ icon: emoji })
+        .eq('id', cardId);
+
+    if (error) {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        return;
+    }
+    await loadCards();
+}
+
+async function deleteCard(cardId) {
+    if (currentRole !== 'admin') {
+        alert('คุณไม่มีสิทธิ์ในการลบข้อมูล');
+        return;
+    }
+
+    if (!confirm('🗑️ ต้องการลบการ์ดนี้หรือไม่?')) return;
+
+    const { error } = await supabaseClient
+        .from('cards')
+        .delete()
+        .eq('id', cardId);
+
+    if (error) {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        return;
+    }
+    await loadCards();
+}
+
+async function deleteLink(cardId, linkIndex) {
+    if (currentRole !== 'admin') {
+        alert('คุณไม่มีสิทธิ์ในการลบข้อมูล');
+        return;
+    }
+
+    const { data: card, error } = await supabaseClient
+        .from('cards')
+        .select('*')
+        .eq('id', cardId)
+        .single();
+
+    if (error || !card) return;
+
+    const links = card.links || [];
+    links.splice(linkIndex, 1);
+
+    const { error: updateErr } = await supabaseClient
+        .from('cards')
+        .update({ links: links })
+        .eq('id', cardId);
+
+    if (updateErr) {
+        alert('เกิดข้อผิดพลาด: ' + updateErr.message);
+        return;
+    }
+    await loadCards();
+}
+
+// ============================================================
+// Render Functions
+// ============================================================
+function renderCards(cards) {
+    const container = document.getElementById('cardContainer');
+    container.innerHTML = '';
+
+    if (cards.length === 0) {
+        container.innerHTML = '<div style="color:#fff;text-align:center;font-size:18px;">ยังไม่มีการ์ด — ผู้ดูแลสามารถเพิ่มการ์ดได้</div>';
+        return;
+    }
+
+    for (const card of cards) {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card';
+        cardEl.dataset.cardId = card.id;
+
+        const links = card.links || [];
+        const isOwner = currentUser && card.user_id === currentUser.id;
+        const canEdit = currentRole === 'admin';
+
+        let linksHtml = '';
+        if (links.length === 0) {
+            linksHtml = '<div class="desc">ไม่มีลิงก์</div>';
+        } else if (links.length === 1) {
+            cardEl.setAttribute('data-single-url', links[0].url);
+            const linkTitle = links[0].title || links[0].url;
+            linksHtml = `<div class="desc">${escapeHtml(linkTitle)}</div>`;
+        } else {
+            linksHtml = '<div class="desc">' +
+                links.map((link, idx) => {
+                    const lt = link.title || link.url;
+                    const deleteBtn = canEdit
+                        ? `<button class="link-delete" onclick="event.stopPropagation(); deleteLink('${card.id}', ${idx})" title="ลบลิงก์">×</button>`
+                        : '';
+                    return `<p><a href="${escapeHtml(link.url)}" target="_blank">${escapeHtml(lt)}</a>${deleteBtn}</p>`;
+                }).join('') +
+                '</div>';
+        }
+
+        const deleteBtn = canEdit
+            ? `<button class="delete-btn" onclick="event.stopPropagation(); deleteCard('${card.id}')">×</button>`
+            : '';
+
+        const iconClick = canEdit
+            ? `onclick="event.stopPropagation(); openEmojiPicker(this.parentElement)"`
+            : '';
+
+        cardEl.innerHTML = `
+            ${deleteBtn}
+            <div class="icon" title="${canEdit ? 'คลิกเพื่อเปลี่ยนไอคอน' : ''}" ${iconClick}>${card.icon || '📘'}</div>
+            <div class="title">${escapeHtml(card.title)}</div>
+            ${linksHtml}
+        `;
+
+        if (links.length === 1) {
+            cardEl.onclick = function(e) {
+                if (e.target.closest('.delete-btn') || e.target.closest('a') || e.target.closest('.icon')) return;
+                window.open(links[0].url, '_blank');
+            };
+        }
+
+        container.appendChild(cardEl);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Keyboard shortcuts
+document.getElementById('inputTitle').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('inputUrl').focus();
+});
+document.getElementById('inputUrl').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('inputLinkTitle').focus();
+});
+document.getElementById('inputLinkTitle').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') addCard();
+});
+</script>
+
+</body>
+</html>
