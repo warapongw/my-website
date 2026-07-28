@@ -566,14 +566,22 @@ h1 {
 </div>
 
 <!-- Login Modal -->
-<div class="login-overlay" id="loginOverlay" onclick="if(event.target===this) closeLogin()">
-    <div class="login-box">
-        <h3>🔐 เข้าสู่ระบบ</h3>
-        <input type="email" id="loginEmail" placeholder="your@email.com">
-        <input type="password" id="loginPassword" placeholder="Password (optional)">
-        <button class="btn-login" onclick="signIn()">📧 ส่ง Magic Link / เข้าสู่ระบบ</button>
-        <p class="hint">💡 หากไม่ใส่รหัสผ่าน ระบบจะส่ง Magic Link เข้าอีเมลให้คลิกเข้าใช้งาน</p>
-        <button class="close-login" onclick="closeLogin()">ปิด</button>
+<div id="loginOverlay" class="overlay" style="display:none;">
+    <div class="modal">
+        <button class="close-btn" onclick="closeLogin()">×</button>
+        <h3>เข้าสู่ระบบ / ลงทะเบียน</h3>
+        
+        <!-- เพิ่มปุ่ม Google Login -->
+        <button onclick="signInWithGoogle()" style="width:100%; padding:10px; margin-bottom:15px; background:#fff; color:#333; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google"> 
+            Continue with Google
+        </button>
+
+        <div style="text-align:center; margin:10px 0; color:#aaa; font-size:12px;">--- หรือใช้ตัวเลือกเดิม ---</div>
+
+        <input type="email" id="loginEmail" placeholder="อีเมลของคุณ">
+        <input type="password" id="loginPassword" placeholder="รหัสผ่าน (ไม่ต้องใส่ ถ้าใช้ Magic Link)">
+        <button onclick="signIn()" style="width:100%; padding:10px; background:#4CAF50; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">ส่ง Magic Link / เข้าสู่ระบบ</button>
     </div>
 </div>
 
@@ -728,6 +736,7 @@ function selectEmoji(emoji) {
     closeEmojiPicker();
 }
 
+
 // ============================================================
 // Auth Functions
 // ============================================================
@@ -780,6 +789,23 @@ async function signIn() {
 
     closeLogin();
     await refreshAuth();
+}
+
+// ฟังก์ชันสำหรับล็อกอินด้วย Google
+async function signInWithGoogle() {
+    // ดึง URL หน้าปัจจุบันของเว็บ (รองรับทั้ง Local และ GitHub Pages อัตโนมัติ)
+    const currentUrl = window.location.origin + window.location.pathname;
+    
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: currentUrl // เมื่อล็อกอินผ่าน Google เสร็จ ให้กลับมาหน้านี้
+        }
+    });
+
+    if (error) {
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Google: ' + error.message);
+    }
 }
 
 async function signOut() {
