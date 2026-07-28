@@ -585,9 +585,8 @@ h1 {
 // ============================================================
 // ⚙️ CONFIG: แก้ไข 2 ค่านี้หลังจากสร้าง Supabase Project
 // ============================================================
-const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://chatznbacqeyjaaakeyy.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoYXR6bmJhY3FleWphYWFrZXl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMzM0OTQsImV4cCI6MjEwMDgwOTQ5NH0.QKbLgmkkv60UXd7YULCyNrYqiRAzzSNbqJ0mQ6n9GKk';
-
 // ============================================================
 // ข้อมูลเริ่มต้น (จะใช้ถ้ายังไม่มีข้อมูลใน Supabase)
 // ============================================================
@@ -653,9 +652,9 @@ const DEFAULT_CARDS = [
 ];
 
 // ============================================================
-// Initialize Supabase
+// Initialize Supabase (เปลี่ยนชื่อตัวแปรเป็น supabaseClient)
 // ============================================================
-let supabase = null;
+let supabaseClient = null;
 let currentUser = null;
 let currentEmoji = '📘';
 let pickerTarget = null;
@@ -666,12 +665,11 @@ if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-an
         '<span style="font-size:14px;">ดูคู่มือ SETUP.md สำหรับวิธีตั้งค่า</span>';
 } else {
     try {
-        // Supabase CDN สร้างตัวแปรชื่อ 'supabase' บน window
-        const sb = window.supabase || supabase;
+        const sb = window.supabase;
         if (!sb || !sb.createClient) {
             throw new Error('Supabase library ไม่ถูกโหลด ลองรีเฟรชหน้า');
         }
-        supabase = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseClient = sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         initApp();
     } catch (err) {
         document.getElementById('loadingMsg').innerHTML =
@@ -679,13 +677,6 @@ if (SUPABASE_URL.includes('your-project') || SUPABASE_ANON_KEY.includes('your-an
             '<span style="font-size:14px;">ตรวจสอบว่าใส่ URL และ API Key ถูกต้อง</span>';
         console.error(err);
     }
-}
-    document.getElementById('loadingMsg').innerHTML =
-        '⚠️ กรุณาแก้ไข <code>SUPABASE_URL</code> และ <code>SUPABASE_ANON_KEY</code> ในโค้ดก่อนใช้งาน<br>' +
-        '<span style="font-size:14px;">ดูคู่มือ SETUP.md สำหรับวิธีตั้งค่า</span>';
-} else {
-    supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    initApp();
 }
 
 // ============================================================
@@ -755,15 +746,13 @@ async function signIn() {
     }
 
     if (password) {
-        // Sign in with password
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
             alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message);
             return;
         }
     } else {
-        // Send Magic Link
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabaseClient.auth.signInWithOtp({
             email,
             options: { emailRedirectTo: window.location.href }
         });
@@ -781,14 +770,14 @@ async function signIn() {
 }
 
 async function signOut() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     currentUser = null;
     updateUI();
     await loadCards();
 }
 
 async function refreshAuth() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabaseClient.auth.getUser();
     currentUser = user;
     updateUI();
     await loadCards();
@@ -826,7 +815,7 @@ async function loadCards() {
     loading.style.display = 'block';
     container.style.display = 'none';
 
-    if (!supabase) {
+    if (!supabaseClient) {
         loading.innerHTML = '⚠️ ยังไม่ได้ตั้งค่า Supabase';
         return;
     }
@@ -835,8 +824,7 @@ async function loadCards() {
         let cards = [];
 
         if (currentUser) {
-            // Load user's own cards
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('cards')
                 .select('*')
                 .eq('user_id', currentUser.id)
@@ -845,8 +833,7 @@ async function loadCards() {
             if (error) throw error;
             cards = data || [];
         } else {
-            // Load all public cards (from any user)
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('cards')
                 .select('*')
                 .order('created_at', { ascending: true });
@@ -855,7 +842,6 @@ async function loadCards() {
             cards = data || [];
         }
 
-        // If no cards and user is logged in, show seed button prominently
         if (currentUser && cards.length === 0) {
             document.getElementById('btnSeed').style.display = 'inline-block';
             document.getElementById('btnSeed').textContent = '🔄 โหลดข้อมูลเริ่มต้น (คลิกที่นี่)';
@@ -884,7 +870,7 @@ async function seedDefaultData() {
 
     try {
         for (const card of DEFAULT_CARDS) {
-            const { error } = await supabase.from('cards').insert({
+            const { error } = await supabaseClient.from('cards').insert({
                 user_id: currentUser.id,
                 title: card.title,
                 icon: card.icon,
@@ -928,8 +914,7 @@ async function addCard() {
         finalUrl = 'https://' + url;
     }
 
-    // Find existing card with same title
-    const { data: existing, error: findErr } = await supabase
+    const { data: existing, error: findErr } = await supabaseClient
         .from('cards')
         .select('*')
         .eq('user_id', currentUser.id)
@@ -942,11 +927,10 @@ async function addCard() {
     }
 
     if (existing) {
-        // Merge into existing card
         const newLink = { url: finalUrl, title: linkTitle || finalUrl };
         const updatedLinks = [...(existing.links || []), newLink];
 
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('cards')
             .update({ links: updatedLinks })
             .eq('id', existing.id);
@@ -956,7 +940,6 @@ async function addCard() {
             return;
         }
     } else {
-        // Create new card
         const displayTitle = linkTitle || title;
         const newCard = {
             user_id: currentUser.id,
@@ -965,14 +948,13 @@ async function addCard() {
             links: [{ url: finalUrl, title: displayTitle }]
         };
 
-        const { error } = await supabase.from('cards').insert(newCard);
+        const { error } = await supabaseClient.from('cards').insert(newCard);
         if (error) {
             alert('เกิดข้อผิดพลาด: ' + error.message);
             return;
         }
     }
 
-    // Clear inputs
     document.getElementById('inputTitle').value = '';
     document.getElementById('inputUrl').value = '';
     document.getElementById('inputLinkTitle').value = '';
@@ -984,7 +966,7 @@ async function addCard() {
 async function updateCardIcon(cardId, emoji) {
     if (!currentUser) return;
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('cards')
         .update({ icon: emoji })
         .eq('id', cardId);
@@ -1005,7 +987,7 @@ async function deleteCard(cardId) {
 
     if (!confirm('🗑️ ต้องการลบการ์ดนี้หรือไม่?')) return;
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
         .from('cards')
         .delete()
         .eq('id', cardId);
@@ -1024,7 +1006,7 @@ async function deleteLink(cardId, linkIndex) {
         return;
     }
 
-    const { data: card, error } = await supabase
+    const { data: card, error } = await supabaseClient
         .from('cards')
         .select('*')
         .eq('id', cardId)
@@ -1035,7 +1017,7 @@ async function deleteLink(cardId, linkIndex) {
     const links = card.links || [];
     links.splice(linkIndex, 1);
 
-    const { error: updateErr } = await supabase
+    const { error: updateErr } = await supabaseClient
         .from('cards')
         .update({ links: links })
         .eq('id', cardId);
@@ -1072,12 +1054,10 @@ function renderCards(cards) {
         if (links.length === 0) {
             linksHtml = '<div class="desc">ไม่มีลิงก์</div>';
         } else if (links.length === 1) {
-            // Single link card - clickable
             cardEl.setAttribute('data-single-url', links[0].url);
             const linkTitle = links[0].title || links[0].url;
             linksHtml = `<div class="desc">${escapeHtml(linkTitle)}</div>`;
         } else {
-            // Multi-link card
             linksHtml = '<div class="desc">' +
                 links.map((link, idx) => {
                     const lt = link.title || link.url;
@@ -1104,7 +1084,6 @@ function renderCards(cards) {
             ${linksHtml}
         `;
 
-        // Click card to open URL (single link only)
         if (links.length === 1) {
             cardEl.onclick = function(e) {
                 if (e.target.closest('.delete-btn') || e.target.closest('a') || e.target.closest('.icon')) return;
@@ -1126,8 +1105,7 @@ function escapeHtml(text) {
 // Init
 // ============================================================
 async function initApp() {
-    // Listen for auth changes
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
             currentUser = session?.user || null;
         } else if (event === 'SIGNED_OUT') {
@@ -1137,7 +1115,6 @@ async function initApp() {
         loadCards();
     });
 
-    // Check current session
     await refreshAuth();
 }
 
